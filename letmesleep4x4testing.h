@@ -1,8 +1,11 @@
+#pragma once
+
 #include <stdint.h>
 #include <stdbool.h>
 
 enum custom_keycodes {
-    PRINT_CONFIG = QK_KB_0,
+    PRINT_ANALOG_CONFIG = QK_KB_0,
+    PRINT_SWITCH_CONFIG,
 };
 
 typedef struct PACKED { 
@@ -16,6 +19,18 @@ typedef struct PACKED {
 
 } analog_config_t; // 5 bytes
 extern analog_config_t analog_config[MATRIX_ROWS][MATRIX_COLS];
+
+typedef struct {
+
+    // Calibration settings
+    uint16_t rest;  // analog value when key is at rest
+
+    // Stuff that changes
+    uint8_t mode;   // copy over mode from analog_config in matrix_init
+    uint8_t old;    // old displacement, initialize to zero
+    
+} analog_key_t; // 4 bytes
+extern analog_key_t analog_key[MATRIX_ROWS][MATRIX_COLS];
 
 typedef struct PACKED {
 
