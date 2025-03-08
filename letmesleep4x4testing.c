@@ -360,28 +360,29 @@ void via_custom_value_command_kb(uint8_t *data, uint8_t length){
 #endif
 
 void send_calibration_info(const char* lookup_table_name, lookup_table_t* lookup_table) {
-    char str[32];  // Buffer for formatted strings
+
+    char str[64];  // Buffer for formatted strings
 
     SEND_STRING(lookup_table_name);
     SEND_STRING(":\n");
     
     SEND_STRING("    lut_a: ");
-    sprintf(str, "%.6f", lookup_table->lut_a);  // Convert double to string
+    sprintf(str, "%.16f", lookup_table->lut_a);  // Convert double to string
     SEND_STRING(str);
     SEND_STRING("\n");
     
     SEND_STRING("    lut_b: ");
-    sprintf(str, "%.6f", lookup_table->lut_b);  // Convert double to string
+    sprintf(str, "%.16f", lookup_table->lut_b);  // Convert double to string
     SEND_STRING(str);
     SEND_STRING("\n");
     
     SEND_STRING("    lut_c: ");
-    sprintf(str, "%.6f", lookup_table->lut_c);  // Convert double to string
+    sprintf(str, "%.16f", lookup_table->lut_c);  // Convert double to string
     SEND_STRING(str);
     SEND_STRING("\n");
     
     SEND_STRING("    lut_d: ");
-    sprintf(str, "%.6f", lookup_table->lut_d);  // Convert double to string
+    sprintf(str, "%.16f", lookup_table->lut_d);  // Convert double to string
     SEND_STRING(str);
     SEND_STRING("\n");
     
@@ -394,6 +395,51 @@ void send_calibration_info(const char* lookup_table_name, lookup_table_t* lookup
     sprintf(str, "%d", lookup_table->max_output);  // Convert uint16_t to string
     SEND_STRING(str);
     SEND_STRING("\n\n");
+
+}
+
+void send_config_info(uint8_t row, uint8_t col) {
+
+    char str[32];  // Buffer for formatted strings
+
+    analog_config_t *config = &analog_config[row][col];
+
+    // Send the values for this specific config entry
+    SEND_STRING("Row: ");
+    sprintf(str, "%d", row);  // Convert row to string
+    SEND_STRING(str);
+    SEND_STRING(" Col: ");
+    sprintf(str, "%d", col);  // Convert col to string
+    SEND_STRING(str);
+    SEND_STRING("\n");
+
+    SEND_STRING("    mode:  ");
+    sprintf(str, "%d", config->mode);  // Convert mode to string
+    SEND_STRING(str);
+    SEND_STRING("\n");
+
+    SEND_STRING("    lower: ");
+    sprintf(str, "%d", config->lower);  // Convert lower to string
+    SEND_STRING(str);
+    SEND_STRING("\n");
+
+    SEND_STRING("    upper: ");
+    sprintf(str, "%d", config->upper);  // Convert upper to string
+    SEND_STRING(str);
+    SEND_STRING("\n");
+
+    SEND_STRING("    down:  ");
+    sprintf(str, "%d", config->down);  // Convert down to string
+    SEND_STRING(str);
+    SEND_STRING("\n");
+
+    SEND_STRING("    up:    ");
+    sprintf(str, "%d", config->up);  // Convert up to string
+    SEND_STRING(str);
+    SEND_STRING("\n");
+
+    SEND_STRING("\n");
+
 }
 
 bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
@@ -412,45 +458,10 @@ bool process_record_kb(uint16_t keycode, keyrecord_t *record) {
             return false;
 
         case PRINT_ANALOG_CONFIG:
+            
             for (int row = 0; row < MATRIX_ROWS; row++) {
                 for (int col = 0; col < MATRIX_COLS; col++) {
-                    analog_config_t *config = &analog_config[row][col];
-
-                    // Send the values for this specific config entry
-                    SEND_STRING("Row: ");
-                    sprintf(str, "%d", row);  // Convert row to string
-                    SEND_STRING(str);
-                    SEND_STRING(" Col: ");
-                    sprintf(str, "%d", col);  // Convert col to string
-                    SEND_STRING(str);
-                    SEND_STRING("\n");
-
-                    SEND_STRING("    mode:  ");
-                    sprintf(str, "%d", config->mode);  // Convert mode to string
-                    SEND_STRING(str);
-                    SEND_STRING("\n");
-
-                    SEND_STRING("    lower: ");
-                    sprintf(str, "%d", config->lower);  // Convert lower to string
-                    SEND_STRING(str);
-                    SEND_STRING("\n");
-
-                    SEND_STRING("    upper: ");
-                    sprintf(str, "%d", config->upper);  // Convert upper to string
-                    SEND_STRING(str);
-                    SEND_STRING("\n");
-
-                    SEND_STRING("    down:  ");
-                    sprintf(str, "%d", config->down);  // Convert down to string
-                    SEND_STRING(str);
-                    SEND_STRING("\n");
-
-                    SEND_STRING("    up:    ");
-                    sprintf(str, "%d", config->up);  // Convert up to string
-                    SEND_STRING(str);
-                    SEND_STRING("\n");
-
-                    SEND_STRING("\n");
+                    send_config_info(row, col);
                 }
             }
             return true;

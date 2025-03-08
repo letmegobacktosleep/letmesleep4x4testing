@@ -1,5 +1,7 @@
 {
     "files.associations": {
-        "config.h": "c"
+        "config.h": "c",
+        "eeconfig_set_defaults.h": "c",
+        "letmesleep4x4testing.h": "c"
     }
 }

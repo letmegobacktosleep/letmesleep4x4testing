@@ -2,6 +2,8 @@
 
 #include <stdint.h>
 
+#include "quantum.h"
+
 #include "config.h"
 #include "letmesleep4x4testing.h"
 #include "eeconfig_set_defaults.h"
@@ -10,6 +12,13 @@
 extern analog_key_t analog_key[MATRIX_ROWS][MATRIX_COLS];
 extern analog_config_t analog_config[MATRIX_ROWS][MATRIX_COLS];
 extern calibration_parameters_t calibration_parameters;
+
+// Max value of raw
+#define ANALOG_RAW_MAX_VALUE 2047
+// Max value of calibrated
+#define ANALOG_CAL_MAX_VALUE 1023
+// Max value of rest - value at around 2mm into keypress
+#define ANALOG_MULTIPLIER_LUT_SIZE 512
 
 void set_default_analog_config(void){
     // loop through rows and columns
