@@ -5,7 +5,7 @@
 #include <stdlib.h>
 
 #include "config.h"
-#include "letmesleepsplit75he.h"
+#include "letmesleep4x4testing.h"
 
 analog_key_t analog_key[MATRIX_ROWS][MATRIX_COLS];
 analog_config_t analog_config[MATRIX_ROWS][MATRIX_COLS];
