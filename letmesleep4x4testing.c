@@ -15,10 +15,37 @@ analog_key_t analog_key[MATRIX_ROWS][MATRIX_COLS];
 analog_config_t analog_config[MATRIX_ROWS][MATRIX_COLS];
 calibration_parameters_t calibration_parameters;
 
-void keyboard_post_init_kb(void) {
-    set_default_analog_config();
+// field in struct
+// EEPROM_KB_PARTIAL_UPDATE(calibration_parameters, displacement);
+#if (EECONFIG_KB_DATA_SIZE) > 0
+#    define EEPROM_KB_PARTIAL_READ(__struct, __field) eeprom_read_block(&(__struct.__field), (void *)((void *)(EECONFIG_KB_DATABLOCK) + offsetof(typeof(__struct), __field)), sizeof(__struct.__field))
+#    define EEPROM_KB_PARTIAL_UPDATE(__struct, __field) eeprom_update_block(&(__struct.__field), (void *)((void *)(EECONFIG_KB_DATABLOCK) + offsetof(typeof(__struct), __field)), sizeof(__struct.__field))
+#endif
+// struct in array of struct
+// EEPROM_USER_PARTIAL_UPDATE(analog_config[row][col]);
+#if (EECONFIG_USER_DATA_SIZE) > 0
+#    define EEPROM_USER_PARTIAL_UPDATE(__struct) eeprom_update_block(&(__struct), (void *)(EECONFIG_USER_DATABLOCK), sizeof(__struct))
+#    define EEPROM_USER_PARTIAL_READ(__struct) eeprom_read_block(&(__struct), (void *)(EECONFIG_USER_DATABLOCK), sizeof(__struct))
+#endif
+// https://discord.com/channels/440868230475677696/440868230475677698/1334525203044106241
+
+void eeconfig_init_user(void) {
+    set_default_analog_config(); // set default values
+    eeconfig_update_user_datablock(&analog_config); // write it to eeprom
+}
+
+void eeconfig_init_kb(void) {
+    set_default_calibration_parameters(); // set default values
+    eeconfig_update_kb_datablock(&calibration_parameters); // write it to eeprom
+}
+
+void keyboard_post_init_user(void) {
+    eeconfig_read_user_datablock(&analog_config);
     set_default_analog_key();
-    set_default_calibration_parameters();
+}
+
+void keyboard_post_init_kb(void) {
+    eeconfig_read_kb_datablock(&calibration_parameters);
 }
 
 #if defined(VIA_ENABLE)
@@ -30,6 +57,7 @@ enum letmesleep_cmd {
     id_custom_set_key_config,
     id_custom_get_lut_config,
     id_custom_set_lut_config,
+    id_custom_save_lut_config,
 };
 
 enum letmesleep_lut_id {
@@ -78,6 +106,9 @@ void letmesleep_set_key_config(uint8_t *data){
     analog_config[*row][*col].upper = *upper;
     analog_config[*row][*col].down  = *down;
     analog_config[*row][*col].up    = *up;
+
+    EEPROM_USER_PARTIAL_UPDATE(analog_config[*row][*col]);
+    // eeconfig_update_user_datablock(&analog_config);
 }
 
 void letmesleep_get_lut_config(uint8_t *data){
@@ -171,6 +202,25 @@ void letmesleep_set_lut_config(uint8_t *data){
         default:
             break;
     }
+}
+
+void letmesleep_save_lut_config(uint8_t *data){
+    uint8_t *lut_id     = &(data[0]);
+
+    switch (*lut_id) {
+        case id_lut_multiplier:
+            EEPROM_KB_PARTIAL_UPDATE(calibration_parameters, multiplier);
+            break;
+        case id_lut_displacement:
+            EEPROM_KB_PARTIAL_UPDATE(calibration_parameters, displacement);
+            break;
+        case id_lut_joystick:
+            EEPROM_KB_PARTIAL_UPDATE(calibration_parameters, joystick);
+            break;
+        default:
+            break;
+    }
+    // eeconfig_update_kb_datablock(&calibration_parameters);
 }
 
 void letmesleep_custom_command_kb(uint8_t *data, uint8_t length){
