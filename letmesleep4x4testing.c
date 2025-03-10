@@ -83,7 +83,7 @@ void letmesleep_set_key_config(uint8_t *data){
 void letmesleep_get_lut_config(uint8_t *data){
     uint8_t *lut_id     = &(data[0]);
     uint8_t *value_id   = &(data[1]);
-    double  *value_data = (double *) &(data[2]);
+    double  *value_data = &(data[2]);
 
     lookup_table_t *lut_config = NULL;
     switch (*lut_id) {
@@ -100,32 +100,31 @@ void letmesleep_get_lut_config(uint8_t *data){
             break;
     }
 
-    tap_code(KC_CAPS);
-
+    double temp_value = 0.0;
     switch (*value_id) {
         case id_lut_a:
-            *value_data = lut_config->lut_a;
+            temp_value = lut_config->lut_a;
             break;
         case id_lut_b:
-            *value_data = lut_config->lut_b;
+            temp_value = lut_config->lut_b;
             break;
         case id_lut_c:
-            *value_data = lut_config->lut_c;
+            temp_value = lut_config->lut_c;
             break;
         case id_lut_d:
-            *value_data = lut_config->lut_d;
+            temp_value = lut_config->lut_d;
             break;
         case id_lut_max_input:
-            *value_data = (double) lut_config->max_input;
+            temp_value = (double) lut_config->max_input;
             break;
         case id_lut_max_output:
-            *value_data = (double) lut_config->max_output;
+            temp_value = (double) lut_config->max_output;
             break;
         default:
             break;
     }
 
-    tap_code(KC_CAPS);
+    memcpy(value_data, &temp_value, sizeof(double));
 }
 
 void letmesleep_set_lut_config(uint8_t *data){
@@ -148,24 +147,26 @@ void letmesleep_set_lut_config(uint8_t *data){
             break;
     }
 
+    double temp_value = 0.0;
+    memcpy(&temp_value, value_data, sizeof(double));
     switch (*value_id) {
         case id_lut_a:
-            lut_config->lut_a = *value_data;
+            lut_config->lut_a = temp_value;
             break;
         case id_lut_b:
-            lut_config->lut_b = *value_data;
+            lut_config->lut_b = temp_value;
             break;
         case id_lut_c:
-            lut_config->lut_c = *value_data;
+            lut_config->lut_c = temp_value;
             break;
         case id_lut_d:
-            lut_config->lut_d = *value_data;
+            lut_config->lut_d = temp_value;
             break;
         case id_lut_max_input:
-            lut_config->max_input = (uint8_t) *value_data;
+            lut_config->max_input = (uint8_t) temp_value;
             break;
         case id_lut_max_output:
-            lut_config->max_output = (uint8_t) *value_data;
+            lut_config->max_output = (uint8_t) temp_value;
             break;
         default:
             break;
