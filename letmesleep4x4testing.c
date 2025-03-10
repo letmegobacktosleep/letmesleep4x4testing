@@ -83,7 +83,7 @@ void letmesleep_set_key_config(uint8_t *data){
 void letmesleep_get_lut_config(uint8_t *data){
     uint8_t *lut_id     = &(data[0]);
     uint8_t *value_id   = &(data[1]);
-    double  *value_data = &(data[2]);
+    double  *value_data = (double *) &(data[2]);
 
     lookup_table_t *lut_config = NULL;
     switch (*lut_id) {
@@ -163,10 +163,10 @@ void letmesleep_set_lut_config(uint8_t *data){
             lut_config->lut_d = temp_value;
             break;
         case id_lut_max_input:
-            lut_config->max_input = (uint8_t) temp_value;
+            lut_config->max_input = (uint16_t) temp_value;
             break;
         case id_lut_max_output:
-            lut_config->max_output = (uint8_t) temp_value;
+            lut_config->max_output = (uint16_t) temp_value;
             break;
         default:
             break;
