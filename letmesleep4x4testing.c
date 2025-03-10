@@ -23,14 +23,6 @@ void keyboard_post_init_kb(void) {
 
 #if defined(VIA_ENABLE)
 
-enum letmesleep_key_config {
-	id_key_mode = 1,
-	id_key_actuation_point,
-	id_key_deadzone,
-	id_key_down,
-	id_key_up,
-};
-
 # if defined(VIAL_ENABLE)
 
 enum letmesleep_cmd {
@@ -56,63 +48,41 @@ enum letmesleep_lut_config {
 };
 
 void letmesleep_get_key_config(uint8_t *data){
-    uint8_t *value_id   = &(data[0]);
-    uint8_t *row        = &(data[1]);
-    uint8_t *col        = &(data[2]);
-    uint8_t *value_data = &(data[3]);
+    uint8_t *row   = &(data[0]);
+    uint8_t *col   = &(data[1]);
+    uint8_t *mode  = &(data[2]);
+    uint8_t *lower = &(data[3]);
+    uint8_t *upper = &(data[4]);
+    uint8_t *down  = &(data[5]);
+    uint8_t *up    = &(data[6]);
 
-    switch (*value_id) {
-        case id_key_mode:
-            *value_data = analog_config[*row][*col].mode;
-            break;
-        case id_key_actuation_point:
-            *value_data = analog_config[*row][*col].lower;
-            break;
-        case id_key_deadzone:
-            *value_data = analog_config[*row][*col].upper;
-            break;
-        case id_key_down:
-            *value_data = analog_config[*row][*col].down;
-            break;
-        case id_key_up:
-            *value_data = analog_config[*row][*col].up;
-            break;
-        default:
-            break;
-    }
+    *mode  = analog_config[*row][*col].mode;
+    *lower = analog_config[*row][*col].lower;
+    *upper = analog_config[*row][*col].upper;
+    *down  = analog_config[*row][*col].down;
+    *up    = analog_config[*row][*col].up;
 }
 
 void letmesleep_set_key_config(uint8_t *data){
-    uint8_t *value_id   = &(data[0]);
-    uint8_t *row        = &(data[1]);
-    uint8_t *col        = &(data[2]);
-    uint8_t *value_data = &(data[3]);
+    uint8_t *row   = &(data[0]);
+    uint8_t *col   = &(data[1]);
+    uint8_t *mode  = &(data[2]);
+    uint8_t *lower = &(data[3]);
+    uint8_t *upper = &(data[4]);
+    uint8_t *down  = &(data[5]);
+    uint8_t *up    = &(data[6]);
 
-    switch (*value_id) {
-        case id_key_mode:
-            analog_key[*row][*col].mode = *value_data;    
-            analog_config[*row][*col].mode = *value_data;
-            break;
-        case id_key_actuation_point:
-            analog_config[*row][*col].lower = *value_data;
-            break;
-        case id_key_deadzone:
-            analog_config[*row][*col].upper = *value_data;
-            break;
-        case id_key_down:
-            analog_config[*row][*col].down = *value_data;
-            break;
-        case id_key_up:
-            analog_config[*row][*col].up = *value_data;
-            break;
-        default:
-            break;
-    }
+    analog_key[*row][*col].mode     = *mode;
+    analog_config[*row][*col].mode  = *mode;
+    analog_config[*row][*col].lower = *lower;
+    analog_config[*row][*col].upper = *upper;
+    analog_config[*row][*col].down  = *down;
+    analog_config[*row][*col].up    = *up;
 }
 
 void letmesleep_get_lut_config(uint8_t *data){
-    uint8_t *value_id   = &(data[0]);
-    uint8_t *lut_id     = &(data[1]);
+    uint8_t *lut_id     = &(data[0]);
+    uint8_t *value_id   = &(data[1]);
     double  *value_data = (double *) &(data[2]);
 
     lookup_table_t *lut_config = NULL;
@@ -155,8 +125,8 @@ void letmesleep_get_lut_config(uint8_t *data){
 }
 
 void letmesleep_set_lut_config(uint8_t *data){
-    uint8_t *value_id   = &(data[0]);
-    uint8_t *lut_id     = &(data[1]);
+    uint8_t *lut_id     = &(data[0]);
+    uint8_t *value_id   = &(data[1]);
     double  *value_data = (double *) &(data[2]);
     
     lookup_table_t *lut_config = NULL;
@@ -200,12 +170,12 @@ void letmesleep_set_lut_config(uint8_t *data){
 
 void letmesleep_custom_command_kb(uint8_t *data, uint8_t length){
     /* data = [ command_id, channel_id, custom_data ] */
-    uint8_t *command_id  = &(data[0]);
-    uint8_t *channel_id  = &(data[1]);
-    uint8_t *custom_data = &(data[2]);
+    uint8_t *sub_command_id = &(data[0]);
+    uint8_t *channel_id     = &(data[1]);
+    uint8_t *custom_data    = &(data[2]);
 
     if (*channel_id == id_custom_channel) {
-        switch (*command_id) {
+        switch (*sub_command_id) {
             case id_custom_get_key_config: {
                 letmesleep_get_key_config(custom_data);
                 break;
@@ -224,7 +194,7 @@ void letmesleep_custom_command_kb(uint8_t *data, uint8_t length){
             }
             default: {
                 /* Unhandled message */
-                *command_id = id_unhandled;
+                *sub_command_id = id_unhandled;
                 break;
             }
         }
@@ -232,7 +202,7 @@ void letmesleep_custom_command_kb(uint8_t *data, uint8_t length){
     }
 
     /* Return the unhandled state */
-	*command_id = id_unhandled;
+	*sub_command_id = id_unhandled;
 
 	/* DO NOT call raw_hid_send(data,length) here, let caller do this */
 }
@@ -242,13 +212,21 @@ void raw_hid_receive_kb(uint8_t *data, uint8_t length) {
 
     // Vial uses an older version of via.c
     // whidh does not have "via_custom_value_command_kb"
-    // use "id_unhandled" to invoke "via_custom_value_command_kb"
+    // use "id_unhandled" to invoke "letmesleep_custom_command_kb"
     if (*command_id == id_unhandled) {
         letmesleep_custom_command_kb(&data[1], length - 1);
     }
 }
 
 # else
+
+enum letmesleep_key_config {
+	id_key_mode = 1,
+	id_key_actuation_point,
+	id_key_deadzone,
+	id_key_down,
+	id_key_up,
+};
 
 void via_config_set_value(uint8_t *data) {
     /* data = [ value_id, value_data ] */
