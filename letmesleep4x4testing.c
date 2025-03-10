@@ -100,6 +100,8 @@ void letmesleep_get_lut_config(uint8_t *data){
             break;
     }
 
+    tap_code(KC_CAPS);
+
     switch (*value_id) {
         case id_lut_a:
             *value_data = lut_config->lut_a;
@@ -122,6 +124,8 @@ void letmesleep_get_lut_config(uint8_t *data){
         default:
             break;
     }
+
+    tap_code(KC_CAPS);
 }
 
 void letmesleep_set_lut_config(uint8_t *data){
