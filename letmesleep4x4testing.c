@@ -15,17 +15,31 @@ analog_key_t analog_key[MATRIX_ROWS][MATRIX_COLS];
 analog_config_t analog_config[MATRIX_ROWS][MATRIX_COLS];
 calibration_parameters_t calibration_parameters;
 
-// field in struct
 // EEPROM_KB_PARTIAL_UPDATE(calibration_parameters, displacement);
 #if (EECONFIG_KB_DATA_SIZE) > 0
-#    define EEPROM_KB_PARTIAL_READ(__struct, __field) eeprom_read_block(&(__struct.__field), (void *)((void *)(EECONFIG_KB_DATABLOCK) + offsetof(typeof(__struct), __field)), sizeof(__struct.__field))
-#    define EEPROM_KB_PARTIAL_UPDATE(__struct, __field) eeprom_update_block(&(__struct.__field), (void *)((void *)(EECONFIG_KB_DATABLOCK) + offsetof(typeof(__struct), __field)), sizeof(__struct.__field))
+# define EEPROM_KB_PARTIAL_UPDATE(__struct, __field) eeprom_update_block(               \
+    &(__struct.__field),                                                                \
+    (void *)((void *)(EECONFIG_KB_DATABLOCK) + offsetof(typeof(__struct), __field)),    \
+    sizeof(__struct.__field)                                                            \
+)
+# define EEPROM_KB_PARTIAL_READ(__struct, __field) eeprom_read_block(                   \
+    &(__struct.__field),                                                                \
+    (void *)((void *)(EECONFIG_KB_DATABLOCK) + offsetof(typeof(__struct), __field)),    \
+    sizeof(__struct.__field)                                                            \
+)
 #endif
-// struct in array of struct
-// EEPROM_USER_PARTIAL_UPDATE(analog_config[row][col]);
+// EEPROM_USER_PARTIAL_UPDATE(analog_config, row, col);
 #if (EECONFIG_USER_DATA_SIZE) > 0
-#    define EEPROM_USER_PARTIAL_UPDATE(__struct) eeprom_update_block(&(__struct), (void *)(EECONFIG_USER_DATABLOCK), sizeof(__struct))
-#    define EEPROM_USER_PARTIAL_READ(__struct) eeprom_read_block(&(__struct), (void *)(EECONFIG_USER_DATABLOCK), sizeof(__struct))
+# define EEPROM_USER_PARTIAL_UPDATE(__array, __row, __col) eeprom_update_block(                             \
+    &(__array[__row][__col]),                                                                               \
+    (void *)((void *)(EECONFIG_USER_DATABLOCK) + sizeof(__array[0][0]) * (__row * MATRIX_COLS + __col)),    \
+    sizeof(__array)                                                                                         \
+)
+# define EEPROM_USER_PARTIAL_READ(__array, __row, __col) eeprom_read_block(                                 \
+    &(__array[__row][__col]),                                                                               \
+    (void *)((void *)(EECONFIG_USER_DATABLOCK) + sizeof(__array[0][0]) * (__row * MATRIX_COLS + __col)),    \
+    sizeof(__array)                                                                                         \
+)
 #endif
 // https://discord.com/channels/440868230475677696/440868230475677698/1334525203044106241
 
@@ -37,6 +51,7 @@ void eeconfig_init_user(void) {
 void eeconfig_init_kb(void) {
     set_default_calibration_parameters(); // set default values
     eeconfig_update_kb_datablock(&calibration_parameters); // write it to eeprom
+    eeconfig_init_user(); // call user
 }
 
 void keyboard_post_init_user(void) {
@@ -46,6 +61,7 @@ void keyboard_post_init_user(void) {
 
 void keyboard_post_init_kb(void) {
     eeconfig_read_kb_datablock(&calibration_parameters);
+    keyboard_post_init_user();
 }
 
 #if defined(VIA_ENABLE)
@@ -107,7 +123,7 @@ void letmesleep_set_key_config(uint8_t *data){
     analog_config[*row][*col].down  = *down;
     analog_config[*row][*col].up    = *up;
 
-    EEPROM_USER_PARTIAL_UPDATE(analog_config[*row][*col]);
+    EEPROM_USER_PARTIAL_UPDATE(analog_config, *row, *col);
     // eeconfig_update_user_datablock(&analog_config);
 }
 
@@ -205,8 +221,8 @@ void letmesleep_set_lut_config(uint8_t *data){
 }
 
 void letmesleep_save_lut_config(uint8_t *data){
-    uint8_t *lut_id     = &(data[0]);
-
+/*
+    uint8_t *lut_id = &(data[0]);
     switch (*lut_id) {
         case id_lut_multiplier:
             EEPROM_KB_PARTIAL_UPDATE(calibration_parameters, multiplier);
@@ -220,7 +236,8 @@ void letmesleep_save_lut_config(uint8_t *data){
         default:
             break;
     }
-    // eeconfig_update_kb_datablock(&calibration_parameters);
+*/
+    eeconfig_update_kb_datablock(&calibration_parameters);
 }
 
 void letmesleep_custom_command_kb(uint8_t *data, uint8_t length){
@@ -245,6 +262,10 @@ void letmesleep_custom_command_kb(uint8_t *data, uint8_t length){
             }
             case id_custom_set_lut_config: {
                 letmesleep_set_lut_config(custom_data);
+                break;
+            }
+            case id_custom_save_lut_config: {
+                letmesleep_save_lut_config(custom_data);
                 break;
             }
             default: {

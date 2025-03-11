@@ -18,6 +18,7 @@ typedef struct PACKED {
     uint8_t up;     // rapid trigger sensitivity
 
 } analog_config_t; // 5 bytes
+_Static_assert(sizeof(analog_config_t)*MATRIX_ROWS*MATRIX_COLS == EECONFIG_USER_DATA_SIZE, "Mismatch in user EECONFIG stored data size");
 extern analog_config_t analog_config[MATRIX_ROWS][MATRIX_COLS];
 
 typedef struct {
@@ -40,8 +41,8 @@ typedef struct PACKED {
     double lut_c;        // 8 bytes
     double lut_d;        // 8 bytes
     // Define the maximum values
-    uint16_t max_input;  // 1 byte
-    uint16_t max_output; // 1 byte
+    uint16_t max_input;  // 2 bytes
+    uint16_t max_output; // 2 bytes
 
 } lookup_table_t; // 36 bytes
 
@@ -52,4 +53,5 @@ typedef struct PACKED {
     lookup_table_t joystick;     // 36 bytes
 
 } calibration_parameters_t; // 108 bytes
+_Static_assert(sizeof(calibration_parameters_t) == EECONFIG_KB_DATA_SIZE, "Mismatch in keyboard EECONFIG stored data size");
 extern calibration_parameters_t calibration_parameters;
